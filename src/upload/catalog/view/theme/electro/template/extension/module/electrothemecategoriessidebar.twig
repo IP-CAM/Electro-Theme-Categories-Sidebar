@@ -1,0 +1,751 @@
+{#
+electrothemecategoriessidebar.twig
+
+Template file for a front page.
+
+#}
+
+<!-- electro-categories-widget -->
+<div class="aside electro-categories-widget">
+    <h3 class="aside-title text_categories">{{ text_categories }}</h3>
+    <input type="hidden" id="electro-categories-currency" data-currency="{{ currency }}">
+    <!-- checkbox-filter -->
+    <div class="checkbox-filter">
+
+        {% for category in categories %}
+        <!-- electro-category-list -->
+        <div class="input-checkbox electro-category-list" data-href="/index.php?route=product/category&path={{ category.id }}">
+            <input type="checkbox" id="category-{{ category.id }}" data-id="{{ category.id }}">
+            <!-- label -->
+            <label for="category-{{ category.id }}" data-href="/index.php?route=product/category&path={{ category.id }}">
+                <span></span>
+                {{ category.name }}
+            </label>
+            <!-- /label -->
+            {# <small>({{ category.amount }})</small> #}
+        </div>
+        <!-- /electro-category-list -->
+        {% endfor %}
+
+    </div>
+    <!-- /checkbox-filter -->
+</div>
+<!-- /electro-categories-widget -->
+
+<!-- aside -->
+<div class="aside">
+    <h3 class="aside-title text_price">{{ text_price }}</h3>
+    <!-- price-filter -->
+    <div class="price-filter">
+        {# <div id="price-slider"></div> #}
+        <!-- price-min -->
+        <div class="input-number price-min">
+            <input id="price-min" type="number" value="{% if price_min %}{{ price_min }}{% endif %}" />
+            <span class="qty-up">+</span>
+            <span class="qty-down">-</span>
+        </div>
+        <!-- /price-min -->
+        <span>-</span>
+        <!-- price-max -->
+        <div class="input-number price-max">
+            <input id="price-max" type="number" value="{% if price_max %}{{ price_max }}{% endif %}" />
+            <span class="qty-up">+</span>
+            <span class="qty-down">-</span>
+        </div>
+        <!-- /price-max -->
+    </div>
+    <!-- /price-filter -->
+</div>
+<!-- /aside -->
+
+<!-- electro-brands-widget -->
+<div class="aside electro-brands-widget">
+    <h3 class="aside-title text_brand">{{ text_brand }}</h3>
+    <!-- checkbox-filter -->
+    <div class="checkbox-filter">
+        {% for brand in brands %}
+        <!-- electro-brand -->
+        <div class="input-checkbox electro-brand">
+            <input type="checkbox" id="brand-{{ brand.id }}" data-id="{{ brand.id }}">
+            <!-- label -->
+            <label for="brand-{{ brand.id }}">
+                <span></span>
+                {{ brand.name }}
+            </label>
+            <!-- /label -->
+        </div>
+        <!-- /electro-brand -->
+        {% endfor %}
+    </div>
+    <!-- /checkbox-filter -->
+</div>
+<!-- /electro-brands-widget -->
+
+{% if top_sellings|length > 0 %}
+<!-- electro-top-sellings-widget -->
+<div class="aside electro-top-sellings-widget">
+    <h3 class="aside-title text_top_selling">{{ text_top_selling }}</h3>
+    {% for product in products %}
+    <!-- product-widget -->
+    <div class="product-widget">
+        <!-- product-img -->
+        <div class="product-img">
+            {% if product.image %}
+            <img src="{{ product.image }}" alt="{{ product.name }}">
+            {% else %}
+            <img src="/image/placeholder.png" alt="{{ product.name }}">
+            {% endif %}
+        </div>
+        <!-- /product-img -->
+        <!-- product-body -->
+        <div class="product-body">
+            <h3 class="product-name">
+                <a href="{{ product.href }}">{{ product.name }}</a>
+            </h3>
+            <!-- product-price -->
+            {% if product.special %}
+            <h4 class="product-price">
+                {{ product.special }}
+                <del class="product-old-price">{{ product.price }}</del>
+            </h4>
+            {% else %}
+            <h4 class="product-price">
+                {{ product.price }}
+            </h4>
+            {% endif %}
+            <!-- /product-price -->
+        </div>
+        <!-- /product-body -->
+    </div>
+    <!-- /product-widget -->
+    {% endfor %}
+</div>
+<!-- /electro-top-sellings-widget -->
+{% endif %}
+
+<script>
+    $(document).ready(function () {
+
+        // removes 'old' categories list
+        $(".aside-categories").remove();
+
+        var category_id = {{ url }};
+
+        
+        /** 
+            Renders products on the page.
+        */
+        var ProductListView = function () {
+
+            this.root = $("#store>.row");
+            
+        };
+        ProductListView.prototype.renderProduct=function (product,wishlist,compare,addToCart) {
+
+                var rating = "";
+                for (var i = 0; i < 5; i++) {
+                    if (product.rating > i) {
+                        rating += '<i class="fa fa-star"></i> ';
+                    } else {
+                        rating += '<i class="fa fa-star-o"></i> ';
+                    }
+                }
+
+                var whatToInsert =
+                    '<div class="product-layout ' + ($('#grid-view').hasClass('active') ?
+                        'product-grid  col-lg-4 col-md-4 col-sm-6' : 'product-list') +
+                    ' col-xs-12"><div class="product"><div class="product-img"><img src="' +
+                    (product.image ? product.image : '/image/placeholder.png') + '" alt="' + product.name +
+                    '"><div class="product-label"></div></div><!-- /product-img --><div class="product-body"><h3 class="product-name"><a href="' +
+                    product.href + '">' + product.name +
+                    '</a></h3><h4 class="product-price" data-price="' + (product.special ? product.special :
+                        product.price) + '">' +
+                    (product.special ? product.special + ' <del class="product-old-price">' + product.price +
+                        '</del>' : product.price) +
+                    '</h4><div class="product-rating">' + rating +
+                    '</div><!-- /product-rating --><div class="product-btns"><input type="hidden" value="' +
+                    product.product_id +
+                    '" class="product-id"><button class="add-to-wishlist" onclick="wishlist.add(\'' +
+                    product.product_id +
+                    '\')"><i class="fa fa-heart-o"></i><span class="tooltipp">'+wishlist+'</span></button> <button class="add-to-compare" onclick="compare.add(\'' +
+                    product.product_id +
+                    '\')"><i class="fa fa-exchange"></i><span class="tooltipp">'+compare+'</span></button></div><!-- /product-btns --></div><!-- /product-body --><input type="hidden" value="1" class="input-quantity"><div class="add-to-cart"><button class="add-to-cart-btn" type="button" data-product-id="' +
+                    product.product_id +
+                    '"><i class="fa fa-shopping-cart"></i>'+addToCart+'</button></div><!-- /add-to-cart --></div><div class="clearfix visible-sm visible-xs"></div></div>';
+                {# var p = $(this.root).append(whatToInsert); #}
+                var p = $(whatToInsert).appendTo($(this.root));
+                console.log(p);
+                p.find(".add-to-cart-btn").on('click', function (event) {
+                    var id = $(event.target).data('product-id');
+                    var quantity = 1;
+
+                    var target = event.target;
+
+                    var data ={
+                        'product_id':id,
+                        'quantity':quantity
+                    };
+
+                    $.ajax({
+                        url: 'index.php?route=checkout/cart/add',
+                        type: 'post',
+                        data: data,
+                        dataType: 'json',
+                        beforeSend: function () {},
+                        complete: function () {},
+                        success: function (json) {
+                            $('.alert-dismissible, .text-danger').remove();
+                            $('.form-group').removeClass('has-error');
+
+                            if (json['error']) {
+                                if (json['error']['option']) {
+                                    for (i in json['error']['option']) {
+                                        var element = $('#input-option' + i.replace('_',
+                                            '-'));
+
+                                        if (element.parent().hasClass('input-group')) {
+                                            element.parent().after(
+                                                '<div class="text-danger">' + json[
+                                                    'error']['option'][i] +
+                                                '</div>');
+                                        } else {
+                                            element.after('<div class="text-danger">' +
+                                                json['error']['option'][i] +
+                                                '</div>');
+                                        }
+                                    }
+                                }
+
+                                if (json['error']['recurring']) {
+                                    $('select[name=\'recurring_id\']').after(
+                                        '<div class="text-danger">' + json['error']
+                                        ['recurring'] + '</div>');
+                                }
+
+                                // Highlight any found errors
+                                $('.text-danger').parent().addClass('has-error');
+                            }
+
+                            if (json['redirect']) {
+                                location = json['redirect'];
+                            }
+
+                            if (json['success']) {
+
+                                $('#content')
+                                    //.parent()
+                                    .before(
+                                        '<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' +
+                                        json['success'] +
+                                        ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>'
+                                    );
+
+
+                                // Need to set timeout otherwise it wont update the total
+                                setTimeout(function () {
+                                    $('#cart > button').html(
+                                        '<span id="cart-total"><i class="fa fa-shopping-cart"></i> ' +
+                                        json['total'] + '</span>');
+                                }, 100);
+                                $('#cart-dropdown .qty').text(/([0-9]{1,})/.exec(json['total'])[0]);
+
+                                $('html, body').animate({
+                                    scrollTop: 0
+                                }, 'slow');
+
+                                updateCartImages();
+                            } else {
+                                $('#content')
+                                    //.parent()
+                                    .before(
+                                        '<div class="alert alert-danger alert-dismissible"><i class="fa fa-check-circle"></i> Oops! Something is wrong. Maybe you have not set some options... Please, ensure that you have set all the required options on the page.<button type="button" class="close" data-dismiss="alert">&times;</button></div>'
+                                    );
+
+                            }
+                            if (!json) {
+                                $('#content')
+                                    //.parent()
+                                    .before(
+                                        '<div class="alert alert-danger alert-dismissible"><i class="fa fa-check-circle"></i> No JSON <button type="button" class="close" data-dismiss="alert">&times;</button></div>'
+                                    );
+                            }
+                            return false;
+                        },
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+                        }
+                    });
+                    return false;
+                });
+                
+
+        };        // /renderProduct()
+        ProductListView.prototype.renderProductList=function (products,wishlist,compare,addToCart) {
+
+                $(this.root).children().remove();
+                if (products) {
+                    for (var i = 0, len = products.length; i < len; i++) {
+                        var product = products[i];
+                        this.renderProduct(product,wishlist,compare,addToCart);
+                    }
+                } else {
+                    console.log("no products");
+                }
+
+        };        // /renderProductList()
+        // /ProductListView
+        var productList = new ProductListView();
+
+        var PricesliderView = function (el, settingsModel) {
+            // init
+            this.priceSlider = document.getElementById(el);
+            if (this.priceSlider) {
+                this.create();
+            }
+        }
+        PricesliderView.prototype.init=function(){};
+        PricesliderView.prototype.create=function (minPrice, maxPrice) {
+                    {# minPrice = floor(minPrice); #}
+                    {# maxPrice = ceil(maxPrice); #}
+                
+                noUiSlider.create(this.priceSlider, {
+                    start: [minPrice, maxPrice],
+                    connect: true,
+                    step: 1,
+                    range: {
+                        'min': minPrice, //parseInt(minPrice),
+                        'max': maxPrice //parseInt(maxPrice)
+                    }
+                });
+
+
+                priceSlider.noUiSlider.on('update', function (values, handle) {
+                    var value = values[handle];
+                    handle ? priceInputMax.value = value :
+                        priceInputMin.value = value;
+                    settingsModel.sendRequest();
+                });
+        };
+        /** 
+            Arranges working process with settings
+        */
+        var SettingsModel =function () {
+
+            this.brands = [];
+            this.categories = [];
+            this.prices = [];
+
+            this.products = [];
+            var self = this;
+        };
+        SettingsModel.prototype._add_setting = function (where, value) {
+                var isNotUnique = false;
+                for (var i = 0, len = where.length; i < len; i++) {
+                    if (where[i] == value) isNotUnique = true;
+                }
+                if (!isNotUnique) where.push(value);
+        };
+        SettingsModel.prototype.addSetting = function (type, value) {
+                switch (type) {
+                    case "brand":
+                        this.brands.push(value);
+                        break;
+                    case "category":
+                        this._add_setting(this.categories, value);
+                        break;
+                    default:
+                        console.log("something is wrong with a switch operator");
+                }
+                this.sendRequest();
+
+        };            // /addSetting()
+        SettingsModel.prototype.getProducts = function () {
+
+                return this.products;
+
+        };            // /getProducts()
+        SettingsModel.prototype.removeSetting = function (type, value) {
+
+                if (type == "brand") {
+                    this.brands = this.brands.filter(function (currentValue) {
+                        if (currentValue === value) {
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    });
+                } else if (type == "category") {
+                    this.categories = this.categories.filter(function (currentValue) {
+                        if (currentValue === value) {
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    });
+                }
+                this.sendRequest();
+
+        };            // /removeSetting()
+        SettingsModel.prototype.sendRequest = function () {
+                var self=this;
+                $.ajax({
+                    url: "/index.php?route=extension/module/electrothemecategoriessidebar/products",
+                    method: "get",
+                    data: {
+                        "brands": self.brands,
+                        "categories": self.categories,
+                        "category": category_id,
+                        "min_price": $('#price-min').val(),
+                        "max_price": $('#price-max').val(),
+                        "currency": $('#electro-categories-currency').data('currency'),
+                        //"page":,
+                        "products_per_page": (function () {
+
+                            var value = $("#input-limit").val();
+                            var arr = value.split('=');
+                            var len = arr.length;
+                            return arr[len - 1];
+
+                        })()
+
+                    },
+                    success: function (data) {
+                        if (data['error']) {
+                            console.log(data['error']);
+                        } else {
+                            self.products = data["products"];
+                            productList.renderProductList(self.products,data.wishlist,data.compare,data.addtocart);
+                            $('.store-qty').text('Showing ' + self.products.length + ' of ' +
+                                data['amount'] + ' (' + (data['pages'] + 1) + ' Pages)'
+                            );
+                        }
+
+
+                    },
+                    error: function (textMessage) {
+
+                        console.log(textMessage.responseText);
+
+                    }
+                });
+                // /ajax
+
+        };            // /sendRequest()
+        // gets lists of brands, categories and prices
+        SettingsModel.prototype.getData = function (categoryId, view) {
+
+                $.ajax({
+                    url: "/index.php?route=extension/module/electrothemecategoriessidebar/getdata",
+                    data: {
+                        "category": categoryId, // ID of the page's category
+                        "currency": $('#electro-categories-currency').data('currency')
+                    },
+                    success: function (data) {
+
+                        this.brands = data['brands'];
+                        this.categories = data['categories'];
+                        this.prices = data['prices'];
+                        this.labels={
+                            'text_categories':data['text_categories'],
+                            'text_price':data['text_price'],
+                            'text_brand':data['text_brand'],
+                            'text_top_selling':data['text_top_selling']
+                        };
+
+                        // Price Slider
+                        var priceSlider = document.getElementById('price-slider');
+                        if (priceSlider) {
+                            noUiSlider.create(priceSlider, {
+                                start: [parseInt(this.prices['min']), parseInt(this.prices['max'])],
+                                connect: true,
+                                step: 1,
+                                range: {
+                                    'min': parseInt(this.prices['min']), //parseInt(this.prices['min']),
+                                    'max': parseInt(this.prices['max']) // parseInt(this.prices['max'])
+                                }
+                            });
+
+
+                            priceSlider.noUiSlider.on('update', function (values, handle) {
+                                var value = values[handle];
+                                handle ? priceInputMax.value = value :priceInputMin.value = value; 
+                                    //self.sendRequest();
+                            });
+                        }
+
+                        view.render(this.brands, this.categories, this.prices,this.labels);
+
+                    },
+                    error: function (textMessage) {
+
+                        console.log(textMessage.responseText);
+
+                    }
+                });
+        };  // /getData()
+        SettingsModel.prototype.getBrands = function () {
+
+                return this.brands;
+
+        };  // /getBrands()
+        SettingsModel.prototype.getCategories = function () {
+
+                return this.categories;
+
+        };// /getCategories()
+        // /SettingsModel
+
+
+        var SettingsView = function (controller) {
+
+            this.controller = controller;
+        }
+        SettingsView.prototype.render = function (brands, categories, prices,labels) {
+
+                // brands
+                for (var i = 0, len = brands.length; i < len; i++) {
+                    var brand = brands[i];
+                    var brandHtml =
+                        '<div class="input-checkbox electro-brand" data-href="/index.php?route=product/category&path=' +
+                        brand.id + '"><input type="checkbox" id="category-' + brand.id + '" data-id="' +
+                        brand.id + '"><label for="category-' + brand.id +
+                        '" data-href="/index.php?route=product/category&path=' + brand.id +
+                        '" ><span></span>' + brand.name + '</label></div>';
+                    $(".electro-brands-widget .checkbox-filter").append(brandHtml);
+                }
+                // categories
+                if (categories.length < 1) {
+                    $("#column-left .electro-categories-widget .aside-title").remove();
+                }
+                for (var i = 0, len = categories.length; i < len; i++) {
+                    var category = categories[i];
+
+                    var categoryHtml =
+                        '<div class="input-checkbox electro-category-list" data-href="/index.php?route=product/category&path=' +
+                        category.id + '"><input type="checkbox" id="category-' + category.id +
+                        '" data-id="' + category.id + '"><label for="category-' + category.id +
+                        '" data-href="/index.php?route=product/category&path=' + category.id +
+                        '" ><span></span>' + category.name + '</label></div>';
+                    $(".electro-categories-widget .checkbox-filter").append(categoryHtml);
+
+                }
+                // prices
+                $("#price-min").val(prices['min']);
+                $("#price-max").val(prices['max']);
+                this.updateEventListeners();
+                // labels
+                $('.text_categories').text(labels['text_categories']);
+                $('.text_price').text(labels['text_price']);
+                $('.text_brand').text(labels['text_brand']);
+                $('.text_top_selling').text(labels['text_top_selling']);
+
+        };            // /render()
+        SettingsView.prototype.updateEventListeners = function () {
+                var self=this;
+                var categoriesFlags = $(".electro-category-list>label");
+                
+                var changeSetting=function(input,name){
+                    var value = $(input).data("id");
+                    var isInputChecked = $(input).prop("checked");
+
+                    if (!isInputChecked) {
+                        self.controller.addSettingValue(name, value);
+                    } else {
+                        self.controller.removeSettingValue(name, value);
+                    }
+                };
+                $(categoriesFlags).on("click", function (event) {
+                    event.stopPropagation();
+                    
+                    var name = "category";
+                    var thisElement = $(event.target);
+                    var categoryInput = $(thisElement).parent().find("input");
+
+                    changeSetting(categoryInput,name);
+                });
+                // /categoriesFlags on click
+                $(categoriesFlags).children("span").on("click", function (event) {
+                    event.stopPropagation();
+
+                    var name = "category";
+                    var thisElement = $(event.target);
+                    var categoryInput = $(thisElement).parent().parent().find("input");
+
+                    changeSetting(categoryInput,name);
+                });
+
+                var brandsFlags = $(".electro-brand>label");
+                $(brandsFlags).on("click", function (event) {
+                    event.stopPropagation();
+
+                    var name = "brand";
+                    var thisElement = $(event.target);
+                    var brandInput = $(thisElement).parent().find("input");
+
+                    changeSetting(brandInput,name);
+                });// /brandsFlags on click
+
+                $(brandsFlags).children("span").on("click",function(event){
+                    event.stopPropagation();
+
+                    var name = "brand";
+                    var thisElement = $(event.target);
+                    var brandInput = $(thisElement).parent().parent().find("input");
+
+                    changeSetting(brandInput,name);
+                });
+                
+        };            // /updateEventListeners()
+
+
+        var SettingsController = function () {
+
+            this.model = new SettingsModel();
+            this.view = new SettingsView(this);
+            this.model.getData(category_id, this.view);
+
+        }
+        // /SettingsController
+        SettingsController.prototype.addSettingValue = function (name, value) {
+                this.model.addSetting(name, value);
+
+        };            // /addSetting()
+        SettingsController.prototype.removeSettingValue = function (name, value) {
+
+                this.model.removeSetting(name, value);
+
+        };            // /removeSetting()
+
+
+        var sController = new SettingsController();
+
+
+        /**
+
+            Prices
+
+        */
+        // input numbers
+        $('.input-number').each(function () {
+
+            var $this = $(this),
+                $input = $this.find('input[type="number"]'),
+                up = $this.find('.qty-up'),
+                down = $this.find('.qty-down');
+
+
+            down.on('click', function () {
+
+                var value = parseInt($input.val()) - 1;
+                value = value < 0 ? 0 : value;
+                $input.val(value);
+                $input.change();
+                updatePriceSlider($this, value);
+                sController.model.sendRequest();
+            });
+
+
+            up.on('click', function () {
+
+                var value = parseInt($input.val()) + 1;
+                $input.val(value);
+                $input.change();
+                updatePriceSlider($this, value);
+                sController.model.sendRequest();
+
+            });
+
+        });
+
+        var min_price;
+        var max_price;
+        var priceInputMax = document.getElementById('price-max'),
+            priceInputMin = document.getElementById('price-min');
+
+
+        priceInputMax.addEventListener('change', function (event) {
+
+            max_price = this.value;
+            updatePriceSlider($(this).parent(), this.value);
+
+        });
+
+
+        priceInputMin.addEventListener('change', function () {
+
+            min_price = this.value;
+            updatePriceSlider($(this).parent(), this.value)
+
+        });
+
+
+        function updatePriceSlider(elem, value) {
+
+            var price = value;
+            var priceSlider = document.getElementById('price-slider');
+            var products = $(".product");
+
+            if (elem.hasClass('price-min')) {
+                min_price = price; 
+                //    priceSlider.noUiSlider.set([value, null]);
+            } else if (elem.hasClass('price-max')) {
+                max_price = price; 
+                //    priceSlider.noUiSlider.set([null, value]);
+            } else if (elem.hasClass('price-max') && elem.hasClass('price-min')) {
+                //min_price = price;
+                //priceSlider.noUiSlider.set([value, null]);
+            }
+
+            for (var i = 0, len = products.length; i < len; i++) {
+                var product = products[i];
+                var reg = /[0-9,]{0,}[.]{1}[0-9]{0,}/;
+
+                var productPrice = parseInt(
+                    reg.exec($(product.querySelector(".product-price")).data("price"))[0]
+                    .split(',')
+                    .join('')
+                );
+
+                if (productPrice < min_price || productPrice > max_price) {
+                    $(product).parent().fadeOut();
+                } else {
+                    $(product).parent().fadeIn();
+                }
+            }
+
+        }
+        // /updatePriceSlider
+
+        // Top sellings
+        var topSellingsRoot = $(".electro-top-sellings-widget");
+        var topSellingsProducts;
+        var topSellingsView = function (products) {
+            for (var i = 0, len = products.length; i < len; i++) {
+                var product = products[i];
+                var productHTML = '<div class="product-widget"><div class="product-img"><img src="/image/' +
+                    (product.image ? product.image : 'placeholder.png') + '" alt="' + product.name +
+                    '"></div><div class="product-body"><h3 class="product-name"><a href="/index.php?route=product/product&product_id=' +
+                    product['product_id'] + '">' + product.name + '</a></h3><h4 class="product-price">' + (
+                        product['special'] ? (product['special'] + '<del class="product-old-price">' +
+                            product['price'] + '</del>') : product['price']) + '</h4></div></div>';
+
+                $(topSellingsRoot).append(productHTML);
+            }
+        };
+
+        $.ajax({
+            url: '/index.php?route=extension/module/electrothemecategoriessidebar/topsellings',
+            data: {
+                "currency": $('#electro-categories-currency').data('currency')
+            },
+            success: function (data) {
+                topSellingsProducts = data;
+                topSellingsView(topSellingsProducts['products']);
+            },
+            error: function (textMessage) {
+                console.log(textMessage.responseText);
+            }
+        });
+
+    });
+</script>
